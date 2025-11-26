@@ -1,0 +1,79 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+.terraform/
+*.terraform.lock.hcl
+terraform.tfstate.lock.info
+
+# Terraform variables files (CRITICAL - contains secrets)
+*.tfvars
+*.tfvars.json
+terraform.tfvars
+
+# Terraform plan files
+*.tfplan
+plan.out
+
+# SSH keys and certificates
+*.pem
+*.key
+*.pub
+id_rsa*
+id_dsa*
+*.cer
+*.crt
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Log files
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Backup files
+*.bak
+*.backup
+
+# Docker
+.dockerignore
+
+# Node.js (if your app uses Node)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python (if your app uses Python)
+__pycache__/
+*.pyc
+.venv
+venv/
+.env/
+
+# Kubernetes config (if you have local kubeconfig)
+kubeconfig
+*.kubeconfig 
