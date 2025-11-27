@@ -50,7 +50,7 @@ variable "ec2_instance_type" {
 variable "db_instance_class" {
   description = "Instance class for RDS"
   type        = string
-  default     = "db.t2.micro"
+  default     = "db.t3.micro"
 }
 
 variable "db_name" {
@@ -69,10 +69,10 @@ variable "db_password" {
   description = "Database administrator password"
   type        = string
   sensitive   = true
-} 
+}
 
 variable "allowed_ssh_ips" {
   description = "List of IP addresses allowed to SSH into instances"
   type        = list(string)
   default     = ["0.0.0.0/0"]
-} 
+}

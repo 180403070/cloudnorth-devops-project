@@ -3,7 +3,7 @@ resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
   enable_dns_support   = true
-  
+
   tags = {
     Name = "${var.project_name}-vpc"
   }
@@ -12,7 +12,7 @@ resource "aws_vpc" "main" {
 # Create Internet Gateway
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
-  
+
   tags = {
     Name = "${var.project_name}-igw"
   }
@@ -25,7 +25,7 @@ resource "aws_subnet" "public" {
   cidr_block              = var.public_subnet_cidrs[count.index]
   availability_zone       = data.aws_availability_zones.available.names[count.index]
   map_public_ip_on_launch = true
-  
+
   tags = {
     Name = "${var.project_name}-public-subnet-${count.index + 1}"
   }
@@ -37,7 +37,7 @@ resource "aws_subnet" "private" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = var.private_subnet_cidrs[count.index]
   availability_zone = data.aws_availability_zones.available.names[count.index]
-  
+
   tags = {
     Name = "${var.project_name}-private-subnet-${count.index + 1}"
   }
@@ -49,7 +49,7 @@ resource "aws_subnet" "database" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = var.db_subnet_cidrs[count.index]
   availability_zone = data.aws_availability_zones.available.names[count.index]
-  
+
   tags = {
     Name = "${var.project_name}-db-subnet-${count.index + 1}"
   }
@@ -58,12 +58,12 @@ resource "aws_subnet" "database" {
 # Create Public Route Table
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
-  
+
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.main.id
   }
-  
+
   tags = {
     Name = "${var.project_name}-public-rt"
   }
@@ -78,9 +78,9 @@ resource "aws_route_table_association" "public" {
 
 # Create NAT Gateway for Private Subnets
 resource "aws_eip" "nat" {
-  count = length(aws_subnet.public)
+  count  = length(aws_subnet.public)
   domain = "vpc"
-  
+
   tags = {
     Name = "${var.project_name}-nat-eip-${count.index + 1}"
   }
@@ -90,11 +90,11 @@ resource "aws_nat_gateway" "main" {
   count         = length(aws_subnet.public)
   allocation_id = aws_eip.nat[count.index].id
   subnet_id     = aws_subnet.public[count.index].id
-  
+
   tags = {
     Name = "${var.project_name}-nat-gateway-${count.index + 1}"
   }
-  
+
   depends_on = [aws_internet_gateway.main]
 }
 
@@ -102,12 +102,12 @@ resource "aws_nat_gateway" "main" {
 resource "aws_route_table" "private" {
   count  = length(aws_subnet.private)
   vpc_id = aws_vpc.main.id
-  
+
   route {
     cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.main[count.index].id
   }
-  
+
   tags = {
     Name = "${var.project_name}-private-rt-${count.index + 1}"
   }
@@ -126,7 +126,7 @@ resource "aws_security_group" "ec2" {
   name        = "${var.project_name}-ec2-sg"
   description = "Security group for EC2 instances"
   vpc_id      = aws_vpc.main.id
-  
+
   ingress {
     description = "SSH"
     from_port   = 22
@@ -134,7 +134,7 @@ resource "aws_security_group" "ec2" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"] # Restrict this in production!
   }
-  
+
   ingress {
     description = "HTTP"
     from_port   = 80
@@ -142,7 +142,7 @@ resource "aws_security_group" "ec2" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   ingress {
     description = "HTTPS"
     from_port   = 443
@@ -159,14 +159,14 @@ resource "aws_security_group" "ec2" {
     protocol    = "tcp"
     cidr_blocks = ["10.0.0.0/16"] # Only within VPC
   }
-  
+
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   tags = {
     Name = "${var.project_name}-ec2-sg"
   }
@@ -177,22 +177,22 @@ resource "aws_security_group" "rds" {
   name        = "${var.project_name}-rds-sg"
   description = "Security group for RDS database"
   vpc_id      = aws_vpc.main.id
-  
+
   ingress {
     description     = "PostgreSQL"
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
     security_groups = [aws_security_group.ec2.id]
-  } 
-  
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   tags = {
     Name = "${var.project_name}-rds-sg"
   }
@@ -203,7 +203,7 @@ resource "aws_security_group" "rds" {
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
-  
+
   filter {
     name   = "name"
     values = ["al2023-ami-2023.*-x86_64"]
@@ -217,7 +217,7 @@ resource "aws_instance" "frontend" {
   subnet_id              = aws_subnet.public[0].id
   vpc_security_group_ids = [aws_security_group.ec2.id]
   key_name               = aws_key_pair.ec2_key.key_name
-  
+
   user_data = <<-EOF
               #!/bin/bash
               yum update -y
@@ -225,7 +225,7 @@ resource "aws_instance" "frontend" {
               systemctl start nginx
               systemctl enable nginx
               EOF
-  
+
   tags = {
     Name = "${var.project_name}-frontend"
   }
@@ -238,13 +238,13 @@ resource "aws_instance" "backend" {
   subnet_id              = aws_subnet.private[0].id
   vpc_security_group_ids = [aws_security_group.ec2.id]
   key_name               = aws_key_pair.ec2_key.key_name
-  
+
   user_data = <<-EOF
               #!/bin/bash
               yum update -y
               # Add your backend application setup here
               EOF
-  
+
   tags = {
     Name = "${var.project_name}-backend"
   }
@@ -260,16 +260,16 @@ resource "aws_key_pair" "ec2_key" {
 # S3 Bucket for static content ---------------------------------------------------------------------
 resource "aws_s3_bucket" "static_content" {
   bucket = "${var.project_name}-static-content-${random_id.bucket_suffix.hex}"
-  
+
   tags = {
     Name = "${var.project_name}-static-content"
   }
 }
 
-resource "aws_s3_bucket_acl" "static_content" {
-  bucket = aws_s3_bucket.static_content.id
-  acl    = "private"
-}
+#resource "aws_s3_bucket_acl" "static_content" {
+#  bucket = aws_s3_bucket.static_content.id
+#  acl    = "private"
+#}
 
 resource "aws_s3_bucket_versioning" "static_content" {
   bucket = aws_s3_bucket.static_content.id
@@ -288,7 +288,7 @@ resource "random_id" "bucket_suffix" {
 resource "aws_db_subnet_group" "main" {
   name       = "${var.project_name}-db-subnet-group"
   subnet_ids = aws_subnet.database[*].id
-  
+
   tags = {
     Name = "${var.project_name}-db-subnet-group"
   }
@@ -300,17 +300,17 @@ resource "aws_db_instance" "main" {
   instance_class         = var.db_instance_class
   allocated_storage      = 20
   engine                 = "postgres"
-  engine_version         = "15.4"
+  engine_version         = "13.18"
   username               = var.db_username
   password               = var.db_password
   db_name                = var.db_name
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [aws_security_group.rds.id]
-  parameter_group_name   = "default.postgres15"
+  parameter_group_name   = "default.postgres13"
   skip_final_snapshot    = true
   publicly_accessible    = false
   multi_az               = false # Set to true for production
-  
+
   tags = {
     Name = "${var.project_name}-rds"
   }
