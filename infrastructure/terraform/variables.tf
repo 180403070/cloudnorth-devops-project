@@ -76,3 +76,21 @@ variable "allowed_ssh_ips" {
   type        = list(string)
   default     = ["0.0.0.0/0"]
 }
+
+variable "environment" {
+  description = "Deployment environment"
+  type        = string
+  default     = "staging"
+}
+
+variable "frontend_image" {
+  description = "Frontend Docker image"
+  type        = string
+  default     = "your-docker-username/cloudnorth-frontend:latest"
+}
+
+variable "backend_image" {
+  description = "Backend Docker image"
+  type        = string
+  default     = "your-docker-username/cloudnorth-backend:latest"
+}
