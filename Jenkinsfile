@@ -3,8 +3,8 @@ pipeline {
     
     environment {
         REGISTRY = "docker.io"
-        FRONTEND_IMAGE = "your-docker-username/cloudnorth-frontend"
-        BACKEND_IMAGE = "your-docker-username/cloudnorth-backend"
+        FRONTEND_IMAGE = "gbayi/cloudnorth-frontend"
+        BACKEND_IMAGE = "gbayi/cloudnorth-backend"
         DOCKER_CREDENTIALS = credentials('docker-hub-credentials')
         AWS_CREDENTIALS = credentials('aws-credentials')
     }
@@ -189,4 +189,4 @@ pipeline {
             echo "Pipeline failed!"
         }
     }
-}
+} 
