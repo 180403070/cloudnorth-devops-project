@@ -87,25 +87,25 @@ pipeline {
         }
         
         // STAGE 5: Test Containers
-        stage('Container Tests') {
-            steps {
-                sh '''
-                    # Test backend container
-                    docker run -d --name backend-test -p 3000:3000 ${BACKEND_IMAGE}:${BUILD_NUMBER}
-                    sleep 10
-                    curl -f http://localhost:3000/api/health || exit 1
-                    docker stop backend-test
-                    docker rm backend-test
-                    
-                    # Test frontend container (basic check)
-                    docker run -d --name frontend-test -p 8080:80 ${FRONTEND_IMAGE}:${BUILD_NUMBER}
-                    sleep 5
-                    curl -f http://localhost:8080 || exit 1
-                    docker stop frontend-test
-                    docker rm frontend-test
-                '''
-            }
-        }
+stage('Container Tests') {
+    steps {
+        sh '''
+            # Test backend container - use port 33000 instead of 3000
+            docker run -d --name backend-test -p 33000:3000 ${BACKEND_IMAGE}:${BUILD_NUMBER}
+            sleep 10
+            curl -f http://localhost:33000/api/health || exit 1
+            docker stop backend-test
+            docker rm backend-test
+            
+            # Test frontend container - use port 8800 instead of 8080
+            docker run -d --name frontend-test -p 8800:80 ${FRONTEND_IMAGE}:${BUILD_NUMBER}
+            sleep 5
+            curl -f http://localhost:8800 || exit 1
+            docker stop frontend-test
+            docker rm frontend-test
+        '''
+    }
+}
         
         // STAGE 6: Push to Registry
         stage('Push to Docker Hub') {
