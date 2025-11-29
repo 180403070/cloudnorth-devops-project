@@ -89,21 +89,31 @@ pipeline {
         // STAGE 5: Test Containers
 stage('Container Tests') {
     steps {
-        sh '''
-            # Test backend container - use port 33000 instead of 3000
-            docker run -d --name backend-test -p 33000:3000 ${BACKEND_IMAGE}:${BUILD_NUMBER}
-            sleep 10
-            curl -f http://localhost:33000/api/health || exit 1
-            docker stop backend-test
-            docker rm backend-test
+        script {
+            // Use random ports - backend uses port 5000 internally
+            def backendPort = 30000 + env.BUILD_NUMBER.toInteger()
+            def frontendPort = 40000 + env.BUILD_NUMBER.toInteger()
             
-            # Test frontend container - use port 8800 instead of 8080
-            docker run -d --name frontend-test -p 8800:80 ${FRONTEND_IMAGE}:${BUILD_NUMBER}
-            sleep 5
-            curl -f http://localhost:8800 || exit 1
-            docker stop frontend-test
-            docker rm frontend-test
-        '''
+            sh """
+                # Test backend container - map to port 5000 internally
+                docker run -d --name backend-test -p ${backendPort}:5000 ${BACKEND_IMAGE}:${BUILD_NUMBER}
+                sleep 15
+                curl --retry 3 --retry-delay 5 --max-time 30 -f http://localhost:${backendPort}/api/health || \\
+                (echo "Backend health check failed - checking logs:" && docker logs backend-test && exit 1)
+                echo "Backend test passed"
+                docker stop backend-test
+                docker rm backend-test
+                
+                # Test frontend container - map to port 80 internally
+                docker run -d --name frontend-test -p ${frontendPort}:80 ${FRONTEND_IMAGE}:${BUILD_NUMBER}
+                sleep 10
+                curl --retry 3 --retry-delay 5 --max-time 30 -f http://localhost:${frontendPort}/ || \\
+                (echo "Frontend health check failed - checking logs:" && docker logs frontend-test && exit 1)
+                echo "Frontend test passed"
+                docker stop frontend-test
+                docker rm frontend-test
+            """
+        }
     }
 }
         
