@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: cloudnorth
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - backend-deployment.yaml
+  - backend-service.yaml
+  - frontend-deployment.yaml
+  - frontend-service.yaml
+  - ingress.yaml
+  - hpa.yaml
+
+commonLabels:
+  app: cloudnorth
+  managed-by: kustomize
+  part-of: cloudnorth-devops-project
+
+images:
+  - name: gbayi/cloudnorth-backend
+    newName: gbayi/cloudnorth-backend
+    newTag: latest
+  - name: gbayi/cloudnorth-frontend
+    newName: gbayi/cloudnorth-frontend
+    newTag: latest

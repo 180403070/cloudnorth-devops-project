@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudnorth-config
+  namespace: cloudnorth
+data:
+  environment: "staging"
+  api.url: "http://backend.cloudnorth.svc.cluster.local"
+  app.name: "CloudNorth"
